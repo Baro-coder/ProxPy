@@ -1,15 +1,15 @@
+import sys
 import requests
 import itertools
-import random as rand
-from proxpy.core.user_agent import get_user_agent_list
 from proxpy.models import Proxy
 
-def proxy_request(proxy_list : list[Proxy], url : str | bytes, http_method : str | bytes = 'get', **kwargs) -> requests.Response:
-    user_agents_list = get_user_agent_list()
-    rand.shuffle(user_agents_list)
-    
+def proxy_request(proxy_list : list[Proxy], 
+                  url : str | bytes, 
+                  http_method : str | bytes = 'get', 
+                  user_agent : str = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:80.0) Gecko/20100101 Firefox/80.0', 
+                  **kwargs) -> requests.Response:
+        
     proxy_pool = itertools.cycle(proxy_list)
-    user_agent_pool = itertools.cycle(user_agents_list)
     
     while True:
         proxy = next(proxy_pool)
@@ -21,24 +21,19 @@ def proxy_request(proxy_list : list[Proxy], url : str | bytes, http_method : str
         headers = requests.utils.default_headers()
         headers.update(
             {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:80.0) Gecko/20100101 Firefox/80.0',
+                'User-Agent' : user_agent,
             }
         )
         
         try:
-            print(f' * {http_method.upper()} --> {proxy} --> {url}')
+            print(f'  * Client --> [{proxy.protocol.value.upper()}] --> {proxy.address}:{proxy.port} --> {url}', file=sys.stderr)
             response = requests.request(method=http_method,
                                         url=url,
                                         proxies=proxies,
                                         headers=headers,
                                         **kwargs)
-
+            return response
+        
         except Exception as err:
-            print(f'   - Error: {type(err)} : {err}')
-            print('   - Error : Looking for another proxy configuration...\n')
-        
-        else:
-            break
-
-        
-    return response
+            print(f'   - Error: {type(err)} : {err}', file=sys.stderr)
+            print('   - Looking for another proxy...\n', file=sys.stderr)

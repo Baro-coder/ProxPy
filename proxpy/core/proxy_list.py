@@ -6,12 +6,6 @@ from proxpy.models import (Proxy, ProxyType, CountryID, Anonymity)
 
 URL = 'https://www.freeproxy.world/'
 
-'''
-
-?type=&anonymity=&country=&speed=&port=&page=1
-
-'''
-
 
 def get_proxy_list(amount : int = None, proxy_type : ProxyType = None, country_id : CountryID = None, anonymity : Anonymity = None, port : int = None):
     # Query params
@@ -69,19 +63,23 @@ def get_proxy_list(amount : int = None, proxy_type : ProxyType = None, country_i
                     speeds.append(int(a.text.split(' ', 1)[0]))
 
             for prot, ip, port, speed in zip(protocols, ips, ports, speeds):
-                if speed > 1000:
-                    continue
-                
                 _protocol = None
                 match(prot):
                     case 'http':
+                        max_speed = 1000
                         _protocol = ProxyType.HTTP
                     case 'https':
+                        max_speed = 4000
                         _protocol = ProxyType.HTTPS
                     case 'socks4':
+                        max_speed = 2000
                         _protocol = ProxyType.SOCKS4
                     case 'socks5':
+                        max_speed = 3000
                         _protocol = ProxyType.SOCKS5
+                        
+                if speed > max_speed:
+                    continue
 
                 if _protocol:
                     if amount is not None:
