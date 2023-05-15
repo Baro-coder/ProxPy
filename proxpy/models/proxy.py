@@ -7,7 +7,7 @@ class ProxyType(Enum):
     HTTPS   = "https"
     SOCKS4  = "socks4"
     SOCKS5  = "socks5"
-    
+
 
 class CountryID(Enum):
     UNKNOWN = "-"

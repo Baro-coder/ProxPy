@@ -1,19 +1,31 @@
+import os
 import sys
 import requests
 from bs4 import BeautifulSoup as bs
-from proxpy.models import (Proxy, ProxyType, CountryID, Anonymity)
+
+_cwd = os.path.dirname(os.path.realpath(__file__))
+_root = os.path.dirname(_cwd)
+sys.path.append(_root)
+
+from models import (Proxy, ProxyType, CountryID, Anonymity)
 
 
-URL = 'https://www.freeproxy.world/'
-
-
-def get_proxy_list(amount : int = None, proxy_type : ProxyType = None, country_id : CountryID = None, anonymity : Anonymity = None, port : int = None):
+def get_proxy_list_freeproxyworld(amount : int = None, 
+                   proxy_type : ProxyType = None, 
+                   country_id : CountryID = None, 
+                   anonymity : Anonymity = None, 
+                   port : int = None,
+                   speed : int = None) -> list[Proxy]:
+    
+    url = 'https://www.freeproxy.world/'
+    
     # Query params
     _type : str = ""
     _anonymity : str = ""
     _country : str = ""
     _speed : str = ""
     _port : str = ""
+    _speed : str = ""
     _page : int = 0
     
     # Params normalization
@@ -25,14 +37,15 @@ def get_proxy_list(amount : int = None, proxy_type : ProxyType = None, country_i
         _anonymity = anonymity.value
     if port is not None:
         _port = str(port)
+    if speed is not None:
+        _speed = str(speed)
     
     proxies : list[Proxy] = []
     
     while True:
         _page += 1
-        query : str = f'{URL}?type={_type}&anonymity={_anonymity}&country={_country}&speed={_speed}&port={_port}&page={_page}'
+        query : str = f'{url}?type={_type}&anonymity={_anonymity}&country={_country}&speed={_speed}&port={_port}&page={_page}'
         print(f'GET --> {query}', file=sys.stderr)
-        print(f'  * Proxies : {len(proxies)}', file=sys.stderr)
         
         response = requests.get(query)
     
@@ -66,20 +79,13 @@ def get_proxy_list(amount : int = None, proxy_type : ProxyType = None, country_i
                 _protocol = None
                 match(prot):
                     case 'http':
-                        max_speed = 1000
                         _protocol = ProxyType.HTTP
                     case 'https':
-                        max_speed = 4000
                         _protocol = ProxyType.HTTPS
                     case 'socks4':
-                        max_speed = 2000
                         _protocol = ProxyType.SOCKS4
                     case 'socks5':
-                        max_speed = 3000
                         _protocol = ProxyType.SOCKS5
-                        
-                if speed > max_speed:
-                    continue
 
                 if _protocol:
                     if amount is not None:
